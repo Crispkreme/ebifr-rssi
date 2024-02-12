@@ -58,13 +58,7 @@ void loop() {
           lcd.setCursor(0, 2);            
           lcd.print("Device is in range");          
           lcd.setCursor(0, 3);            
-          lcd.print("Status: Data Receive"); 
-
-          // ACTIVATE THE ALERT
-          tone(buzzer, 1000); 
-          delay(1000);       
-          noTone(buzzer);
-          delay(1000);
+          lcd.print("Status: Data Send"); 
 
           disconnectFromDevice(deviceAddress);
         }
