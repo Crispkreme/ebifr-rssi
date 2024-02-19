@@ -1,21 +1,59 @@
+// TO DO
+// COMMUNICATE 2 BLUETOOTH MODULE
+// PAIRING 2 BLUETOOTH MODULE
+// CONNECT2 BLUETOOTH DEVICE
+// CONNECTED - GREEN LED ON
+//           - DISPLAY "CONNECTED DEVICE"
+// DISCONNECTED BLUETOOTH DEVICE
+//           - GREEN LED OFF
+//           - RED LED ON
+//           - DISPLAY "DISCONNECTED DEVICE"
+
+//CONFIGURATION
+// SLAVE
+// ADDRESS - +ADDR:98D3:51:F94FC7
+// NAME    - +NAME:BLUETOOTH-1
+// PSWD    - 1234
+// ROLE    - 0
+
+// MASTER
+// ADDRESS - +ADDR:0022:12:0232DB
+// NAME    - +NAME:MASTER-BLUETOOTH
+// PSWD    - 1234
+// ROLE    - 1
+
+// SLAVE HC-06 
+// PIN CONFIGURATION
+// VCC     ->  5V
+// GND     ->  GND
+// TX      ->  10
+// RX      ->  11
+
 #include <SoftwareSerial.h>
 
-SoftwareSerial bluetoothSerial(10, 11); // RX, TX
+SoftwareSerial mySerial(10, 11); // RX, TX
+void setup()
+{
 
-void setup() {
   Serial.begin(9600);
-  bluetoothSerial.begin(9600); // Set the baud rate to match your HC-06 module
-}
-
-void loop() {
-  // Receive data from master
-  while (bluetoothSerial.available()) {
-    char c = bluetoothSerial.read();
-    Serial.print(c);
+  while (!Serial)
+  {
   }
 
-  // Send data to master
-  bluetoothSerial.println("Hello from slave!");
+  Serial.println("Welcome to RSSI Reciever");
 
-  delay(1000);
+  mySerial.begin(9600);
+
+}
+
+void loop()
+{
+  if (mySerial.available())
+  {
+    Serial.write(mySerial.read());
+  }
+  if (Serial.available())
+  {
+    mySerial.write(Serial.read());
+  }
 }
