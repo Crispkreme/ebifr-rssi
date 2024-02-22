@@ -47,28 +47,24 @@ void loop() {
     mySerial.read();
   }
 
-  // Check if AT command is working
   sendCommand("AT");
   if (waitForResponse("OK")) {
 
-    // AT command is working
     Serial.println("AT command is working");
 
-    // Get version
     sendCommand("AT+VERSION?");
     if (waitForResponse("+VERSION:")) {
       String version = mySerial.readStringUntil('\r\n');
       Serial.println("Version: " + version);
     }
 
-    // Get role
     sendCommand("AT+ROLE?");
     if (waitForResponse("+ROLE:")) {
+
       int role = mySerial.parseInt();
       if (role == 1) {
         Serial.println("Role: MASTER");
 
-        // Check state
         sendCommand("AT+STATE?");
 
         if (waitForResponse("+STATE:")) {
@@ -102,7 +98,6 @@ void loop() {
                   state.trim();
 
                   if (state.indexOf("DISCONNECTED") != -1) {
-
                     Serial.println("STATE: DISCONNECTED");
                   }
                 }
@@ -114,8 +109,8 @@ void loop() {
         Serial.println("Error: Invalid role");
       }
     }
+
   } else {
-    // AT command failed
     Serial.println("Error: AT command failed");
   }
 }

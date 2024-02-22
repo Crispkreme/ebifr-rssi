@@ -1,46 +1,88 @@
 #include <SoftwareSerial.h>
-#include <LiquidCrystal_I2C.h>
 
-SoftwareSerial bluetoothSerial(10, 11); // RX, TX
-LiquidCrystal_I2C lcd(0x27, 20, 4); // I2C address 0x27, 20 column and 4 rows
+SoftwareSerial mySerial(10, 11); // RX, TX
 
-const int buzzer = 9; //buzzer to arduino pin 9
+#define GREENLED 4
+#define REDLED 6
 
 void setup() {
+  pinMode(GREENLED, OUTPUT);
+  pinMode(REDLED, OUTPUT);
+
   Serial.begin(9600);
-  bluetoothSerial.begin(38400);
+  while (!Serial) {}
 
-  lcd.init(); // initialize the lcd
-  lcd.backlight();
+  Serial.println("Welcome to RSSI Receiver");
+  mySerial.begin(9600);
+}
 
-  pinMode(buzzer, OUTPUT);
-  
+void sendCommand(const char* command) {
+  mySerial.println(command);
+  delay(500); // Wait for response
+}
+
+bool waitForResponse(const char* response) {
+  unsigned long startTime = millis();
+  size_t responseLength = strlen(response);
+  size_t index = 0;
+  while (millis() - startTime < 3000) { // Wait for maximum 3 seconds
+    if (mySerial.available() > 0) {
+      char c = mySerial.read();
+      if (c == response[index]) {
+        index++;
+        if (index == responseLength) {
+          return true;
+        }
+      } else {
+        index = 0;
+      }
+    }
+  }
+  return false;
 }
 
 void loop() {
-  // Receive data from master
-  while (bluetoothSerial.available()) {
-    char c = bluetoothSerial.read();
-    Serial.print(c);
+
+  while (mySerial.available() > 0) {
+    mySerial.read();
   }
 
-  // Send data to master
-  bluetoothSerial.println("Hello from slave!");
-  
-  // DISPLAY THE DATA HERE
-  lcd.setCursor(0, 0);            
-  lcd.print("EBIFR-RSSI");          
-  lcd.setCursor(0, 1);            
-  lcd.print("Message:"); 
-  lcd.setCursor(0, 2);            
-  lcd.print("Device is in range");          
-  lcd.setCursor(0, 3);            
-  lcd.print("Status: Data Receive"); 
+  sendCommand("AT");
+  if (waitForResponse("OK")) {
 
-  // ACTIVATE THE ALERT
-  tone(buzzer, 1000); 
-  delay(1000);       
-  noTone(buzzer);
-  delay(1000);
+    Serial.println("AT command is working");
 
+    sendCommand("AT+VERSION?");
+    if (waitForResponse("+VERSION:")) {
+      String version = mySerial.readStringUntil('\r\n');
+      Serial.println("Version: " + version);
+    }
+
+    sendCommand("AT+ROLE?");
+    if (waitForResponse("+ROLE:")) {
+
+      int role = mySerial.parseInt();
+      if (role == 0) { // Check if slave role
+        Serial.println("Role: SLAVE");
+
+        sendCommand("AT+STATE?");
+        if (waitForResponse("+STATE:")) {
+          String state = mySerial.readStringUntil('\r\n');
+          state.trim();
+
+          if (state.indexOf("CONNECTED") != -1) {
+            Serial.println("STATE: CONNECTED");
+            digitalWrite(GREENLED, HIGH);
+            digitalWrite(REDLED, LOW);
+            Serial.println("ALERT: Emergency");
+          }
+        }
+      } else {
+        Serial.println("Error: Invalid role");
+      }
+    }
+
+  } else {
+    Serial.println("Error: AT command failed");
+  }
 }
