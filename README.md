@@ -58,6 +58,7 @@ RX -> 11
 
 ## Desired Output 
 **Communicate 2 Bluetooth module**
+
 Pairing 2 Bluetooth module  
 Connect2 Bluetooth device  
 Connected - Green LED on  
