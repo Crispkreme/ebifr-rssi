@@ -28,42 +28,42 @@ The project utilizes the following materials:
 
 ## Pin Configuration
 **Slave**  
-Address - +ADDR:98D3:51:F94FC7
-Name - +NAME:BLUETOOTH-1
-Pswd - 1234
+Address - +ADDR:98D3:51:F94FC7  
+Name - +NAME:BLUETOOTH-1  
+Pswd - 1234  
 Role - 0 
 
 **Master**  
-Address - +ADDR:0022:12:0232DB
-Name - +NAME:MASTER-BLUETOOTH
-Pswd - 1234
+Address - +ADDR:0022:12:0232DB  
+Name - +NAME:MASTER-BLUETOOTH  
+Pswd - 1234  
 Role - 1
 
 **Master HC-05**  
-Pin configuration
-HC-05 -> Arduino Uno
-EN -> 3.3V
-VCC -> 5V
-GND -> GND
-TX -> 10
+Pin configuration  
+HC-05 -> Arduino Uno  
+EN -> 3.3V  
+VCC -> 5V  
+GND -> GND  
+TX -> 10  
 RX -> 11 
 
 **Slave HC-06**  
-Pin configuration
-HC-06 -> Arduino Uno
-VCC -> 5V
-GND -> GND
-TX -> 10
+Pin configuration  
+HC-06 -> Arduino Uno  
+VCC -> 5V  
+GND -> GND  
+TX -> 10  
 RX -> 11  
 
-## Desired output 
+## Desired Output 
 **Communicate 2 Bluetooth module**
-Pairing 2 Bluetooth module
-Connect2 Bluetooth device
-Connected - Green LED on
-- Display "Connected device"
-- Send message "Emergency"
-Disconnected Bluetooth device
-- Green LED off
-- Red LED on
-- Display "Disconnected device"
+Pairing 2 Bluetooth module  
+Connect2 Bluetooth device  
+Connected - Green LED on  
+- Display "Connected device"  
+- Send message "Emergency"  
+Disconnected Bluetooth device  
+- Green LED off  
+- Red LED on  
+- Display "Disconnected device"  
