@@ -27,43 +27,43 @@ The project utilizes the following materials:
 - Arduino IDE for programming and development.
 
 ## Pin Configuration
-**SLAVE**  
-ADDRESS - +ADDR:98D3:51:F94FC7  
-NAME    - +NAME:BLUETOOTH-1  
-PSWD    - 1234  
-ROLE    - 0  
+**Slave**  
+Address - +ADDR:98D3:51:F94FC7
+Name - +NAME:BLUETOOTH-1
+Pswd - 1234
+Role - 0 
 
-**MASTER**  
-ADDRESS - +ADDR:0022:12:0232DB  
-NAME    - +NAME:MASTER-BLUETOOTH  
-PSWD    - 1234  
-ROLE    - 1  
+**Master**  
+Address - +ADDR:0022:12:0232DB
+Name - +NAME:MASTER-BLUETOOTH
+Pswd - 1234
+Role - 1
 
-**MASTER HC-05**  
-PIN CONFIGURATION  
-HC-05   ->  ARDUINO UNO  
-EN      ->  3.3V  
-VCC     ->  5V  
-GND     ->  GND  
-TX      ->  10  
-RX      ->  11  
+**Master HC-05**  
+Pin configuration
+HC-05 -> Arduino Uno
+EN -> 3.3V
+VCC -> 5V
+GND -> GND
+TX -> 10
+RX -> 11 
 
-**SLAVE HC-06**  
-PIN CONFIGURATION  
-HC-06   ->  ARDUINO UNO  
-VCC     ->  5V  
-GND     ->  GND  
-TX      ->  10  
-RX      ->  11  
+**Slave HC-06**  
+Pin configuration
+HC-06 -> Arduino Uno
+VCC -> 5V
+GND -> GND
+TX -> 10
+RX -> 11  
 
-## Desired Output  
-**COMMUNICATE 2 BLUETOOTH MODULE**
-PAIRING 2 BLUETOOTH MODULE  
-CONNECT2 BLUETOOTH DEVICE  
-CONNECTED - GREEN LED ON  
-          - DISPLAY "CONNECTED DEVICE"  
-          - SEND MESSAGE "EMERGENCY"  
-DISCONNECTED BLUETOOTH DEVICE  
-          - GREEN LED OFF  
-          - RED LED ON  
-          - DISPLAY "DISCONNECTED DEVICE"
+## Desired output 
+**Communicate 2 Bluetooth module**
+Pairing 2 Bluetooth module
+Connect2 Bluetooth device
+Connected - Green LED on
+- Display "Connected device"
+- Send message "Emergency"
+Disconnected Bluetooth device
+- Green LED off
+- Red LED on
+- Display "Disconnected device"
