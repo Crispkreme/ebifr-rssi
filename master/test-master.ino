@@ -46,22 +46,26 @@ void setup() {
   while (!Serial) {}
 
   Serial.println("Welcome to RSSI Transmitter");
-  mySerial.begin(38400); // Set baud rate to match slave
+  mySerial.begin(38400); 
 
-  // Wait for the slave to initialize
-  delay(2000); // Adjust delay as needed
+  delay(2000);
 }
 
 void sendCommand(const char* command) {
   mySerial.println(command);
-  delay(1000); // Wait for response
+  delay(1000); // Delay for command execution
+}
+
+void sendCommandToSlave(const char* command) {
+  mySerial.println(command);
+  delay(1000); // Delay for command execution
 }
 
 bool waitForResponse(const char* response) {
   unsigned long startTime = millis();
   size_t responseLength = strlen(response);
   size_t index = 0;
-  while (millis() - startTime < 3000) { // Wait for maximum 3 seconds
+  while (millis() - startTime < 3000) { 
     if (mySerial.available() > 0) {
       char c = mySerial.read();
       if (c == response[index]) {
@@ -88,36 +92,41 @@ void processState(const char* state) {
 
 void removeConnectedDevices() {
   sendCommand("AT+RMAAD");
+
   if (waitForResponse("OK")) {
     Serial.println("All devices deleted in the paired list");
+    digitalWrite(GREENLED, LOW); // Turn off green LED
+    digitalWrite(REDLED, HIGH); // Turn on red LED
   } else {
     Serial.println("Failed to delete devices");
   }
 }
 
 void disconnectedDevices() {
-  // Disconnect
   sendCommand("AT+DISC");
 
-  // Wait for the "+DISC:" response indicating successful disconnection
-  if (waitForResponse("OK")) {
-    Serial.println("Disconnected successfully");
-    digitalWrite(REDLED, HIGH);   // Turn on the red LED
+  if (waitForResponse("+DISC:")) {
+    processState("SUCCESS");
+    if (waitForResponse("OK")) {
+      Serial.println("Disconnected successfully");
+      sendCommandToSlave("DISCONNECTED"); // Send message to slave
+    } else {
+      Serial.println("Failed to disconnect");
+    }
   } else {
-    Serial.println("Failed to disconnect");
+    Serial.println("Error: Disconnection error");
   }
 }
 
 void loop() {
   while (mySerial.available() > 0) {
-    mySerial.read();
+    mySerial.read(); // Clear serial buffer
   }
 
   // Check if AT command is working
   sendCommand("AT");
   if (waitForResponse("OK")) {
     Serial.println("AT command is working");
-
     removeConnectedDevices();
 
     // Get role
@@ -126,26 +135,28 @@ void loop() {
       int role = mySerial.parseInt();
       if (role == 1) {
         Serial.println("Role: MASTER");
-
-        // Check state
         sendCommand("AT+STATE?");
         if (waitForResponse("+STATE:")) {
           processState("READY");
-
-          // Connect
-          sendCommand("AT+LINK=98D3,51,F94FC7"); // Replace with slave's Bluetooth address
-          sendCommand("AT+STATE?");
-
-          if (waitForResponse("+STATE:")) {
-            processState("CONNECTED");
-            digitalWrite(GREENLED, HIGH);
-            digitalWrite(REDLED, LOW);
-            Serial.println("ALERT: Emergency");
-
-            disconnectedDevices();
-
-            removeConnectedDevices();
+          sendCommand("AT+LINK=98D3,51,F94FC7"); 
+          if (waitForResponse("OK")) {
+            sendCommand("AT+STATE?");
+            if (waitForResponse("+STATE:")) {
+              processState("CONNECTED");
+              digitalWrite(GREENLED, HIGH); // Turn on green LED
+              digitalWrite(REDLED, LOW); // Turn off red LED
+              sendCommandToSlave("EMERGENCY"); // Send emergency message to slave
+            } else {
+              Serial.println("Error: Device is not connected");
+            }
+          } else {
+            Serial.println("Error: Device is not linked");
           }
+          delay(1000);
+          disconnectedDevices();
+          delay(1000);
+          removeConnectedDevices();
+          delay(5000);
         }
       } else {
         Serial.println("Error: Invalid role");
@@ -155,41 +166,3 @@ void loop() {
     Serial.println("Error: AT command failed");
   }
 }
-
-
-// #include <SoftwareSerial.h>
-
-// SoftwareSerial bluetoothSerial(10, 11); // RX, TX pins for Bluetooth module
-
-// void setup() {
-//   Serial.begin(9600); // Initialize serial communication for debugging
-//   bluetoothSerial.begin(9600); // Initialize Bluetooth serial communication
-  
-//   // Wait for Bluetooth module to initialize
-//   delay(1000);
-  
-//   Serial.println("Master device ready.");
-// }
-
-// void loop() {
-//   // Send disconnect command to slave device
-//   disconnectSlave();
-  
-//   // Wait for a while before sending the disconnect command again (if needed)
-//   delay(5000); // Adjust delay as needed
-// }
-
-// void disconnectSlave() {
-//   // Send disconnect command to slave device
-//   bluetoothSerial.println("D"); // Sending 'D' to represent disconnect command
-  
-//   // Wait for acknowledgment from slave
-//   delay(1000); // Adjust delay as needed
-  
-//   // Check if disconnection acknowledgment is received
-//   if (bluetoothSerial.find("Success")) {
-//     Serial.println("Slave disconnected successfully.");
-//   } else {
-//     Serial.println("Failed to disconnect slave.");
-//   }
-// }
