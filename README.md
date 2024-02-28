@@ -27,11 +27,11 @@ The project utilizes the following materials:
 - Arduino IDE for programming and development.
 
 ## Pin Configuration
-**SLAVE**
-ADDRESS - +ADDR:98D3:51:F94FC7
-NAME    - +NAME:BLUETOOTH-1
-PSWD    - 1234
-ROLE    - 0
+**SLAVE**  
+ADDRESS - +ADDR:98D3:51:F94FC7  
+NAME    - +NAME:BLUETOOTH-1  
+PSWD    - 1234  
+ROLE    - 0  
 
 **MASTER**
 ADDRESS - +ADDR:0022:12:0232DB
