@@ -1,88 +1,112 @@
-#define SLAVE_ADDRESS "0022,12,0232DB"
+#include <SoftwareSerial.h>
+
+SoftwareSerial mySerial(10, 11); // RX, TX
+
 #define GREENLED 4
 #define REDLED 6
+
+const char* addresses[] = {
+  "98D3,51,H94FU0",
+  "6843,10,194FT1",
+  "AW33,21,L94FF6"
+};
 
 void setup() {
   pinMode(GREENLED, OUTPUT);
   pinMode(REDLED, OUTPUT);
-  Serial.begin(9600);
+
+  Serial.begin(19200);
+  while (!Serial) {}
+
+  Serial.println("Welcome to RSSI Transmitter");
+  mySerial.begin(38400);
+}
+
+void sendCommand(const char* command) {
+  mySerial.println(command);
+  delay(500); // Wait for response
+}
+
+bool waitForResponse(const char* response) {
+  unsigned long startTime = millis();
+  size_t responseLength = strlen(response);
+  size_t index = 0;
+  while (millis() - startTime < 3000) { // Wait for maximum 3 seconds
+    if (mySerial.available() > 0) {
+      char c = mySerial.read();
+      if (c == response[index]) {
+        index++;
+        if (index == responseLength) {
+          return true;
+        }
+      } else {
+        index = 0;
+      }
+    }
+  }
+  return false;
 }
 
 void loop() {
-  // Check if AT command is working
-  Serial.println("AT");
-  delay(500); // Wait for response
-  
-  if (Serial.find("OK")) {
-    // AT command is working
+  while (mySerial.available() > 0) {
+    mySerial.read();
+  }
+
+  sendCommand("AT");
+  if (waitForResponse("OK")) {
     Serial.println("AT command is working");
 
-    // Get version
-    Serial.println("AT+VERSION?");
-    delay(500);
-    if (Serial.find("+VERSION:")) {
-      String version = Serial.readStringUntil('\n');
+    sendCommand("AT+VERSION?");
+    if (waitForResponse("+VERSION:")) {
+      String version = mySerial.readStringUntil('\r\n');
       Serial.println("Version: " + version);
     }
 
-    // Get role
-    Serial.println("AT+ROLE?");
-    delay(500);
-    if (Serial.find("+ROLE:")) {
-      int role = Serial.parseInt();
+    sendCommand("AT+ROLE?");
+    if (waitForResponse("+ROLE:")) {
+      int role = mySerial.parseInt();
       if (role == 1) {
-        Serial.println("Role: Slave");
+        Serial.println("Role: MASTER");
 
-        // Set mode
-        Serial.println("AT+CMODE=1");
-        delay(500);
+        sendCommand("AT+STATE?");
 
-        // Inquiry
-        Serial.println("AT+INQ");
-        delay(500);
+        if (waitForResponse("+STATE:")) {
+          String state = mySerial.readStringUntil('\r\n');
+          state.trim();
 
-        // Check for slave address
-        if (SLAVE_ADDRESS != "EXISTS") {
-          // Display error message
-          Serial.println("Error: Slave address does not exist");
-        } else {
-          // Bind to slave address
-          Serial.println("AT+BIND=" + String(SLAVE_ADDRESS));
-          delay(500);
+          if (state.indexOf("READY") != -1) {
+            Serial.println("STATE: READY");
 
-          // Check state
-          Serial.println("AT+STATE?");
-          delay(500);
-          if (Serial.find("READY")) {
-            // Pair
-            Serial.println("AT+PAIR=" + String(SLAVE_ADDRESS) + ",20");
-            delay(500);
+            for (int i = 0; i < sizeof(addresses) / sizeof(addresses[0]); i++) {
+              sendCommand("AT+LINK=" + String(addresses[i]));
 
-            // Check state
-            Serial.println("AT+STATE?");
-            delay(500);
-            if (Serial.find("PAIRED")) {
-              // Connect
-              Serial.println("AT+LINK=" + String(SLAVE_ADDRESS));
-              delay(500);
+              sendCommand("AT+STATE?");
 
-              // Check state
-              Serial.println("AT+STATE?");
-              delay(500);
-              if (Serial.find("CONNECTED")) {
-                // Green LED on, Red LED off
-                digitalWrite(GREENLED, HIGH);
-                digitalWrite(REDLED, LOW);
-                Serial.println("ALERT: Emergency");
-                // Sound buzzer
-              } else {
-                Serial.println("Error: Not connected");
+              if (waitForResponse("+STATE:")) {
+                String state = mySerial.readStringUntil('\r\n');
+                state.trim();
+
+                if (state.indexOf("CONNECTED") != -1) {
+                  Serial.println("STATE: CONNECTED");
+                  digitalWrite(GREENLED, HIGH);
+                  digitalWrite(REDLED, LOW);
+                  Serial.println("ALERT: Emergency");
+
+                  sendCommand("AT+DISC");
+
+                  sendCommand("AT+STATE?");
+
+                  if (waitForResponse("+STATE:")) {
+                    String state = mySerial.readStringUntil('\r\n');
+                    state.trim();
+
+                    if (state.indexOf("DISCONNECTED") != -1) {
+                      Serial.println("STATE: DISCONNECTED");
+                    }
+                  }
+                }
               }
-            } else {
-              Serial.println("Error: Not paired");
             }
-          } else {
-            Serial.println("Error: Not ready");
           }
         }
       } else {
@@ -90,7 +114,6 @@ void loop() {
       }
     }
   } else {
-    // AT command failed
     Serial.println("Error: AT command failed");
   }
 }
