@@ -10,9 +10,12 @@ void setup() {
   pinMode(REDLED, OUTPUT);
 
   Serial.begin(9600);
-  while (!Serial) {}
+  while (!Serial)
+  {
+  }
 
-  Serial.println("Welcome to RSSI Receiver");
+  Serial.println("Welcome to RSSI Reciever");
+
   mySerial.begin(9600);
 }
 
@@ -41,6 +44,15 @@ bool waitForResponse(const char* response) {
   return false;
 }
 
+void processState(const char* state) {
+  String response = mySerial.readStringUntil('\r\n');
+  response.trim();
+
+  if (response.indexOf(state) != -1) {
+    Serial.println("STATE: " + String(state));
+  }
+}
+
 void loop() {
 
   while (mySerial.available() > 0) {
@@ -66,17 +78,25 @@ void loop() {
         Serial.println("Role: SLAVE");
 
         sendCommand("AT+STATE?");
+        
         if (waitForResponse("+STATE:")) {
-          String state = mySerial.readStringUntil('\r\n');
-          state.trim();
+          processState("CONNECTED");
 
-          if (state.indexOf("CONNECTED") != -1) {
-            Serial.println("STATE: CONNECTED");
-            digitalWrite(GREENLED, HIGH);
-            digitalWrite(REDLED, LOW);
-            Serial.println("ALERT: Emergency");
-          }
+          digitalWrite(GREENLED, HIGH);
+          digitalWrite(REDLED, LOW);
+          Serial.println("SLAVE ALERT: Emergency");
         }
+
+        sendCommand("AT+STATE?");
+
+        if (waitForResponse("+STATE:")) {
+          processState("DISCONNECTED");
+
+          digitalWrite(GREENLED, LOW);
+          digitalWrite(REDLED, HIGH);
+          Serial.println("SLAVE ALERT: Emergency");
+        }
+
       } else {
         Serial.println("Error: Invalid role");
       }
