@@ -41,75 +41,64 @@ bool waitForResponse(const char* response) {
   return false;
 }
 
-void loop() {
+void processState(const char* state) {
+  String response = mySerial.readStringUntil('\r\n');
+  response.trim();
 
+  if (response.indexOf(state) != -1) {
+    Serial.println("STATE: " + String(state));
+  }
+}
+
+void loop() {
   while (mySerial.available() > 0) {
     mySerial.read();
   }
 
+  // Check if AT command is working
   sendCommand("AT");
   if (waitForResponse("OK")) {
-
     Serial.println("AT command is working");
 
-    sendCommand("AT+VERSION?");
-    if (waitForResponse("+VERSION:")) {
-      String version = mySerial.readStringUntil('\r\n');
-      Serial.println("Version: " + version);
-    }
-
+    // Get role
     sendCommand("AT+ROLE?");
     if (waitForResponse("+ROLE:")) {
-
       int role = mySerial.parseInt();
       if (role == 1) {
         Serial.println("Role: MASTER");
 
+        // Check state
         sendCommand("AT+STATE?");
-
         if (waitForResponse("+STATE:")) {
-          String state = mySerial.readStringUntil('\r\n');
-          state.trim();
+          processState("READY");
 
-          if (state.indexOf("READY") != -1) {
-            Serial.println("STATE: READY");
+          // Connect
+          sendCommand("AT+LINK=98D3,51,F94FC7");
+          sendCommand("AT+STATE?");
+          if (waitForResponse("+STATE:")) {
+            processState("CONNECTED");
+            digitalWrite(GREENLED, HIGH);
+            digitalWrite(REDLED, LOW);
+            Serial.println("ALERT: Emergency");
 
-            sendCommand("AT+LINK=98D3,51,F94FC7");
+            // Disconnect
+            sendCommand("AT+DISC");
 
-            sendCommand("AT+STATE?");
-
-            if (waitForResponse("+STATE:")) {
-              String state = mySerial.readStringUntil('\r\n');
-              state.trim();
-
-              if (state.indexOf("CONNECTED") != -1) {
-
-                Serial.println("STATE: CONNECTED");
-                digitalWrite(GREENLED, HIGH);
-                digitalWrite(REDLED, LOW);
-                Serial.println("ALERT: Emergency");
-                
-                sendCommand("AT+DISC");
-
-                sendCommand("AT+STATE?");
-
-                if (waitForResponse("+STATE:")) {
-                  String state = mySerial.readStringUntil('\r\n');
-                  state.trim();
-
-                  if (state.indexOf("DISCONNECTED") != -1) {
-                    Serial.println("STATE: DISCONNECTED");
-                  }
-                }
-              }
+            // Wait for the "+DISC:" response indicating successful disconnection
+            if (waitForResponse("OK")) {
+              Serial.println("Disconnected successfully");
+              digitalWrite(GREENLED, LOW);  // Turn off the green LED
+              digitalWrite(REDLED, HIGH);   // Turn on the red LED
+            } else {
+              Serial.println("Failed to disconnect");
             }
+
           }
         }
       } else {
         Serial.println("Error: Invalid role");
       }
     }
-
   } else {
     Serial.println("Error: AT command failed");
   }
